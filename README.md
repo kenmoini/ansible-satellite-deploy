@@ -1,33 +1,34 @@
 # ansible-satellite-deploy
-Deploy Red Hat Satellite with Ansible
-The fastpath for more coffee time
+Deploy a single Red Hat Satellite 6.4 Beta Server using Ansible!
+Set a few variables, kick back, and get some reposyncing quickly!
 
 ## Requirements
 Requirements to get this to fly
 
 ### Client
 * make
-* ansible
+* ansible 2.6
 
 ### Target
-* Red Hat Enterprise Linux >= 6.x
-* Red Hat Satellite subscription
+* Red Hat Enterprise Linux >= 7.3
+* Red Hat Satellite/Smart Management Subscription
 
 ## Run it
 
 ### Prepare
 ```bash
-$ git clone https://github.com/sspreitzer/ansible-satellite-deploy.git
+$ git clone https://github.com/kenmoini/ansible-satellite-deploy.git
 $ cd ansible-satellite-deploy
 ```
 
-Edit *vars.yml* to reflect your settings, most notably
+Edit *vars.yml* to reflect your settings, most notably...
 ```yaml
 ---
 ansible_ssh_host: 10.1.2.10
 rhn_username: yourrhnuser
 rhn_password: yourrhnpass
 ```
+...and anything else that says <REPLACE_ME>
 
 ### Execute
 ```bash
