@@ -1,22 +1,27 @@
 ---
-# Installing Red Hat Satellite
+# Installing Red Hat Satellite 6.4 Beta
 - hosts: satellite
+  become: yes
   environment: "{{satellite_environment}}"
   tasks:
-    - name: "Set hostname to {{ansible_hostname}}.{{ansible_domain}}"
-      lineinfile: dest=/etc/hosts line="{{ansible_default_ipv4.address}} {{ansible_hostname}}.{{ansible_domain}} {{ansible_hostname}}"
-    - name: Subscribe system to RHN
-      command: /usr/sbin/subscription-manager register --force --username="{{rhn_username}}" --password="{{rhn_password}}"
-    - name: Fetch Satellite software pool
-      command: /usr/sbin/subscription-manager list --available --all --matches='Red Hat Satellite*' --pool-only
-      register: poolid
-    - name: "Attach to Satellite software pool {{poolid.stdout_lines[0]}}"
-      command: /usr/sbin/subscription-manager attach --pool="{{poolid.stdout_lines[0]}}"
+    - name: "Set hosts file to {{sat_hostname}}.{{sat_domain}}"
+      lineinfile: dest=/etc/hosts line="{{ansible_default_ipv4.address}} {{sat_hostname}}.{{sat_domain}} {{sat_hostname}}"
+    - name: "Set hostname to {{sat_hostname}}.{{sat_domain}}"
+      hostname:
+        name: "{{sat_hostname}}.{{sat_domain}}"
+    - name: Subscribe to RHSM via username/password/pool_id
+      redhat_subscription:
+        state: present
+        username: "{{ rhn_username }}"
+        password: "{{ rhn_password }}"
+        pool: "{{ rhn_pool }}"
     - name: Disable all repositories
       command: /usr/sbin/subscription-manager repos --disable="*"
     - name: Enable Satellite repositories
       command: /usr/sbin/subscription-manager repos --enable="{{item}}"
       with_items: "{{ satellite_repos }}"
+    - name: Update system packages
+      yum: name="*" state=latest
     - name: Install firewalld
       yum: name=firewalld
       when: ansible_distribution_major_version>=7
@@ -30,7 +35,7 @@
     - name: Restart firewalld
       service: name=firewalld state=restarted
       when: ansible_distribution_major_version>=7
-    - name: Install katello
-      yum: name=katello
-    - name: Run katello installer
-      command: /usr/sbin/katello-installer --no-colors -v -l error --foreman-admin-username="{{satellite_admin_username}}" --foreman-admin-password="{{satellite_admin_password}}" --foreman-initial-location="{{satellite_location}}" --foreman-initial-organization="{{satellite_organization}}"
+    - name: Install Satellite
+      yum: name=satellite state=present
+    - name: Run Satellite Installer
+      command: satellite-installer --scenario satellite --foreman-initial-organization "{{satellite_organization}}" --foreman-initial-location "{{satellite_location}}" --foreman-admin-username "{{satellite_admin_username}}" --foreman-admin-password "{{satellite_admin_password}}" --foreman-proxy-puppetca true --foreman-proxy-tftp true --enable-foreman-plugin-discovery
